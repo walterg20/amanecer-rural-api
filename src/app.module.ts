@@ -14,6 +14,8 @@ import { ProveedoresModule } from './proveedores/proveedores.module'
 import { RematesModule } from './remates/remates.module'
 import { MessagingModule } from './messaging/messaging.module'
 import { StatsModule } from './stats/stats.module'
+import { CacheModule } from './cache/cache.module'
+import { QueueModule } from './queue/queue.module'
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { StatsModule } from './stats/stats.module'
     RematesModule,
     MessagingModule,
     StatsModule,
+    CacheModule,
+    QueueModule,
   ],
   controllers: [AppController],
 })

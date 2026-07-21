@@ -8,11 +8,7 @@ import { Evento } from '../eventos/entities/evento.entity'
 import { Auction } from '../remates/entities/auction.entity'
 import { Clasificado } from '../clasificados/entities/clasificado.entity'
 import { Transaction } from '../payments/entities/transaction.entity'
-
-interface CacheEntry<T> {
-  data: T
-  expiresAt: number
-}
+import { CacheService } from '../cache/cache.service'
 
 export interface MonthlyCount {
   mes: number
@@ -28,8 +24,6 @@ export interface MonthlyRevenue {
 
 @Injectable()
 export class StatsService {
-  private readonly cache = new Map<string, CacheEntry<any>>()
-
   constructor(
     @InjectRepository(Post) private readonly postRepo: Repository<Post>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
@@ -38,115 +32,97 @@ export class StatsService {
     @InjectRepository(Auction) private readonly auctionRepo: Repository<Auction>,
     @InjectRepository(Clasificado) private readonly clasificadoRepo: Repository<Clasificado>,
     @InjectRepository(Transaction) private readonly transactionRepo: Repository<Transaction>,
+    private readonly cache: CacheService,
   ) {}
 
   async getDashboard(anio?: number) {
     const year = anio || new Date().getFullYear()
     const cacheKey = `stats:dashboard:${year}`
 
-    const cached = this.getFromCache(cacheKey)
-    if (cached) return cached
+    return this.cache.wrap(cacheKey, async () => {
+      const [
+        totalPosts, totalUsers, totalProveedores,
+        totalEventos, totalRemates, totalClasificados,
+        postsPorMes, usersPorMes, revenuePorMes,
+      ] = await Promise.all([
+        this.postRepo.count(),
+        this.userRepo.count(),
+        this.proveedorRepo.count(),
+        this.eventoRepo.count(),
+        this.auctionRepo.count(),
+        this.clasificadoRepo.count(),
+        this.getPostsByMonth(year),
+        this.getUsersByMonth(year),
+        this.getRevenueByMonth(year),
+      ])
 
-    const [
-      totalPosts, totalUsers, totalProveedores,
-      totalEventos, totalRemates, totalClasificados,
-      postsPorMes, usersPorMes, revenuePorMes,
-    ] = await Promise.all([
-      this.postRepo.count(),
-      this.userRepo.count(),
-      this.proveedorRepo.count(),
-      this.eventoRepo.count(),
-      this.auctionRepo.count(),
-      this.clasificadoRepo.count(),
-      this.getPostsByMonth(year),
-      this.getUsersByMonth(year),
-      this.getRevenueByMonth(year),
-    ])
-
-    const result = {
-      totalPosts, totalUsers, totalProveedores,
-      totalEventos, totalRemates, totalClasificados,
-      postsPorMes, usersPorMes, revenuePorMes,
-    }
-
-    this.setCache(cacheKey, result, 5 * 60 * 1000)
-    return result
+      return {
+        totalPosts, totalUsers, totalProveedores,
+        totalEventos, totalRemates, totalClasificados,
+        postsPorMes, usersPorMes, revenuePorMes,
+      }
+    }, 300)
   }
 
   async getPostsByMonth(anio?: number): Promise<MonthlyCount[]> {
     const year = anio || new Date().getFullYear()
-    const cacheKey = `stats:posts:${year}`
 
-    const cached = this.getFromCache<MonthlyCount[]>(cacheKey)
-    if (cached) return cached
+    return this.cache.wrap(`stats:posts:${year}`, async () => {
+      const raw = await this.postRepo
+        .createQueryBuilder('p')
+        .select("EXTRACT(MONTH FROM p.createdAt)", "mes")
+        .addSelect("EXTRACT(YEAR FROM p.createdAt)", "anio")
+        .addSelect("COUNT(*)", "count")
+        .where("EXTRACT(YEAR FROM p.createdAt) = :year", { year })
+        .groupBy("EXTRACT(YEAR FROM p.createdAt), EXTRACT(MONTH FROM p.createdAt)")
+        .orderBy("EXTRACT(MONTH FROM p.createdAt)", "ASC")
+        .getRawMany()
 
-    const raw = await this.postRepo
-      .createQueryBuilder('p')
-      .select("EXTRACT(MONTH FROM p.createdAt)", "mes")
-      .addSelect("EXTRACT(YEAR FROM p.createdAt)", "anio")
-      .addSelect("COUNT(*)", "count")
-      .where("EXTRACT(YEAR FROM p.createdAt) = :year", { year })
-      .groupBy("EXTRACT(YEAR FROM p.createdAt), EXTRACT(MONTH FROM p.createdAt)")
-      .orderBy("EXTRACT(MONTH FROM p.createdAt)", "ASC")
-      .getRawMany()
-
-    const result = raw.map(r => ({
-      mes: Number(r.mes), anio: Number(r.anio), count: Number(r.count),
-    }))
-
-    this.setCache(cacheKey, result, 10 * 60 * 1000)
-    return result
+      return raw.map(r => ({
+        mes: Number(r.mes), anio: Number(r.anio), count: Number(r.count),
+      }))
+    }, 600)
   }
 
   async getUsersByMonth(anio?: number): Promise<MonthlyCount[]> {
     const year = anio || new Date().getFullYear()
-    const cacheKey = `stats:users:${year}`
 
-    const cached = this.getFromCache<MonthlyCount[]>(cacheKey)
-    if (cached) return cached
+    return this.cache.wrap(`stats:users:${year}`, async () => {
+      const raw = await this.userRepo
+        .createQueryBuilder('u')
+        .select("EXTRACT(MONTH FROM u.createdAt)", "mes")
+        .addSelect("EXTRACT(YEAR FROM u.createdAt)", "anio")
+        .addSelect("COUNT(*)", "count")
+        .where("EXTRACT(YEAR FROM u.createdAt) = :year", { year })
+        .groupBy("EXTRACT(YEAR FROM u.createdAt), EXTRACT(MONTH FROM u.createdAt)")
+        .orderBy("EXTRACT(MONTH FROM u.createdAt)", "ASC")
+        .getRawMany()
 
-    const raw = await this.userRepo
-      .createQueryBuilder('u')
-      .select("EXTRACT(MONTH FROM u.createdAt)", "mes")
-      .addSelect("EXTRACT(YEAR FROM u.createdAt)", "anio")
-      .addSelect("COUNT(*)", "count")
-      .where("EXTRACT(YEAR FROM u.createdAt) = :year", { year })
-      .groupBy("EXTRACT(YEAR FROM u.createdAt), EXTRACT(MONTH FROM u.createdAt)")
-      .orderBy("EXTRACT(MONTH FROM u.createdAt)", "ASC")
-      .getRawMany()
-
-    const result = raw.map(r => ({
-      mes: Number(r.mes), anio: Number(r.anio), count: Number(r.count),
-    }))
-
-    this.setCache(cacheKey, result, 10 * 60 * 1000)
-    return result
+      return raw.map(r => ({
+        mes: Number(r.mes), anio: Number(r.anio), count: Number(r.count),
+      }))
+    }, 600)
   }
 
   async getRevenueByMonth(anio?: number): Promise<MonthlyRevenue[]> {
     const year = anio || new Date().getFullYear()
-    const cacheKey = `stats:revenue:${year}`
 
-    const cached = this.getFromCache<MonthlyRevenue[]>(cacheKey)
-    if (cached) return cached
+    return this.cache.wrap(`stats:revenue:${year}`, async () => {
+      const raw = await this.transactionRepo
+        .createQueryBuilder('t')
+        .select("EXTRACT(MONTH FROM t.createdAt)", "mes")
+        .addSelect("EXTRACT(YEAR FROM t.createdAt)", "anio")
+        .addSelect("SUM(t.amount)", "total")
+        .where("EXTRACT(YEAR FROM t.createdAt) = :year", { year })
+        .andWhere("t.status = 'approved'")
+        .groupBy("EXTRACT(YEAR FROM t.createdAt), EXTRACT(MONTH FROM t.createdAt)")
+        .orderBy("EXTRACT(MONTH FROM t.createdAt)", "ASC")
+        .getRawMany()
 
-    const raw = await this.transactionRepo
-      .createQueryBuilder('t')
-      .select("EXTRACT(MONTH FROM t.createdAt)", "mes")
-      .addSelect("EXTRACT(YEAR FROM t.createdAt)", "anio")
-      .addSelect("SUM(t.amount)", "total")
-      .where("EXTRACT(YEAR FROM t.createdAt) = :year", { year })
-      .andWhere("t.status = 'approved'")
-      .groupBy("EXTRACT(YEAR FROM t.createdAt), EXTRACT(MONTH FROM t.createdAt)")
-      .orderBy("EXTRACT(MONTH FROM t.createdAt)", "ASC")
-      .getRawMany()
-
-    const result = raw.map(r => ({
-      mes: Number(r.mes), anio: Number(r.anio), total: Number(r.total),
-    }))
-
-    this.setCache(cacheKey, result, 5 * 60 * 1000)
-    return result
+      return raw.map(r => ({
+        mes: Number(r.mes), anio: Number(r.anio), total: Number(r.total),
+      }))
+    }, 300)
   }
 
   generateCsv(section: string, data: any): string {
@@ -203,16 +179,5 @@ export class StatsService {
     }
 
     return `${header}Sección no encontrada: ${section}`
-  }
-
-  private getFromCache<T>(key: string): T | null {
-    const entry = this.cache.get(key)
-    if (!entry) return null
-    if (Date.now() > entry.expiresAt) return null
-    return entry.data
-  }
-
-  private setCache<T>(key: string, data: T, ttl: number): void {
-    this.cache.set(key, { data, expiresAt: Date.now() + ttl })
   }
 }

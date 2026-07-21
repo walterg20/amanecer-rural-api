@@ -9,12 +9,14 @@ import { Clasificado } from '../clasificados/entities/clasificado.entity'
 import { Transaction } from '../payments/entities/transaction.entity'
 import { StatsService } from './stats.service'
 import { StatsController } from './stats.controller'
+import { CacheModule } from '../cache/cache.module'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Post, User, Proveedor, Evento, Auction, Clasificado, Transaction,
     ]),
+    CacheModule,
   ],
   providers: [StatsService],
   controllers: [StatsController],

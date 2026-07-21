@@ -1,8 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Auction, AuctionStatus } from './entities/auction.entity'
 import { Lot, LotStatus } from './entities/lot.entity'
+import { RemateActivatedEvent } from './events/remate-activated.event'
+import { RemateCancelledEvent } from './events/remate-cancelled.event'
 
 @Injectable()
 export class RematesService {
@@ -11,7 +14,41 @@ export class RematesService {
     private readonly auctionRepo: Repository<Auction>,
     @InjectRepository(Lot)
     private readonly lotRepo: Repository<Lot>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  async publish(id: number, userId: number): Promise<Auction> {
+    const auction = await this.auctionRepo.findOne({ where: { id } })
+    if (!auction) throw new NotFoundException('Remate not found')
+    if (auction.status !== AuctionStatus.SCHEDULED) {
+      throw new BadRequestException('Solo se pueden activar remates en estado scheduled')
+    }
+
+    auction.status = AuctionStatus.IN_PROGRESS
+    const saved = await this.auctionRepo.save(auction)
+
+    this.eventEmitter.emit(
+      'remate.activated',
+      new RemateActivatedEvent(saved.id, userId),
+    )
+
+    return saved
+  }
+
+  async cancel(id: number, userId: number): Promise<Auction> {
+    const auction = await this.auctionRepo.findOne({ where: { id } })
+    if (!auction) throw new NotFoundException('Remate not found')
+
+    auction.status = AuctionStatus.CANCELLED
+    const saved = await this.auctionRepo.save(auction)
+
+    this.eventEmitter.emit(
+      'remate.cancelled',
+      new RemateCancelledEvent(saved.id, userId),
+    )
+
+    return saved
+  }
 
   private slugify(text: string): string {
     return text

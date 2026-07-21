@@ -63,6 +63,24 @@ export class AdminPostsController {
     await this.postsService.softDelete(+id)
     return { data: { id: +id, deleted: true } }
   }
+
+  @Post(':id/publish')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Publicar artículo', description: 'Cambia un post de draft a published y setea publishedAt' })
+  async publish(@Param('id') id: string, @CurrentUser('id') userId: number) {
+    const post = await this.postsService.publish(+id, userId)
+    return { data: post }
+  }
+
+  @Post(':id/archive')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Archivar artículo', description: 'Cambia un post de published a archived' })
+  async archive(@Param('id') id: string, @CurrentUser('id') userId: number) {
+    const post = await this.postsService.archive(+id, userId)
+    return { data: post }
+  }
 }
 
 @ApiTags('Admin / Categorías')

@@ -10,6 +10,7 @@ import { UpdateStatusDto } from './dto/update-status.dto'
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
+import { CurrentUser } from '../common/decorators/current-user.decorator'
 import { ImageUpload } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Clasificados')
@@ -69,8 +70,8 @@ export class AdminClasificadosController {
   @Roles('superadmin', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Aprobar/rechazar', description: 'Aprueba o rechaza un clasificado. Al aprobar se calcula expires_at según el plan (solo admin)' })
-  async updateStatus(@Param('id') id: string, @Body() body: UpdateStatusDto) {
-    const clasificado = await this.clasificadosService.updateStatus(+id, body.status)
+  async updateStatus(@Param('id') id: string, @Body() body: UpdateStatusDto, @CurrentUser('id') userId: number) {
+    const clasificado = await this.clasificadosService.updateStatus(+id, body.status, userId)
     return { data: clasificado }
   }
 }

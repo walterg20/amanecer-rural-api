@@ -1,9 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Post, PostStatus } from './entities/post.entity'
 import { Category } from './entities/category.entity'
 import { Tag } from './entities/tag.entity'
+import { PostPublishedEvent } from './events/post-published.event'
+import { PostArchivedEvent } from './events/post-archived.event'
 
 @Injectable()
 export class PostsService {
@@ -14,6 +17,7 @@ export class PostsService {
     private readonly categoryRepo: Repository<Category>,
     @InjectRepository(Tag)
     private readonly tagRepo: Repository<Tag>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findAll(query: { type?: string; category?: string; status?: string; page?: number; limit?: number }) {
@@ -71,6 +75,43 @@ export class PostsService {
   async softDelete(id: number): Promise<void> {
     const result = await this.postRepo.softDelete(id)
     if (result.affected === 0) throw new NotFoundException('Post not found')
+  }
+
+  async publish(id: number, userId: number): Promise<Post> {
+    const post = await this.postRepo.findOne({ where: { id } })
+    if (!post) throw new NotFoundException('Post not found')
+    if (post.status !== PostStatus.DRAFT) {
+      throw new BadRequestException('Solo se pueden publicar posts en estado draft')
+    }
+
+    post.status = PostStatus.PUBLISHED
+    post.publishedAt = new Date()
+    const saved = await this.postRepo.save(post)
+
+    this.eventEmitter.emit(
+      'post.published',
+      new PostPublishedEvent(saved.id, userId, saved.publishedAt!),
+    )
+
+    return saved
+  }
+
+  async archive(id: number, userId: number): Promise<Post> {
+    const post = await this.postRepo.findOne({ where: { id } })
+    if (!post) throw new NotFoundException('Post not found')
+    if (post.status !== PostStatus.PUBLISHED) {
+      throw new BadRequestException('Solo se pueden archivar posts publicados')
+    }
+
+    post.status = PostStatus.ARCHIVED
+    const saved = await this.postRepo.save(post)
+
+    this.eventEmitter.emit(
+      'post.archived',
+      new PostArchivedEvent(saved.id, userId),
+    )
+
+    return saved
   }
 
   async createCategory(data: { name: string; description?: string; parentId?: number }): Promise<Category> {

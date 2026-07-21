@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Clasificado, ClasificadoStatus, ClasificadoPlan } from './entities/clasificado.entity'
+import { ClasificadoApprovedEvent } from '../common/events/clasificado-approved.event'
 
 @Injectable()
 export class ClasificadosService {
   constructor(
     @InjectRepository(Clasificado)
     private readonly clasificadoRepo: Repository<Clasificado>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private slugify(text: string): string {
@@ -75,7 +78,7 @@ export class ClasificadosService {
     if (result.affected === 0) throw new NotFoundException('Clasificado not found')
   }
 
-  async updateStatus(id: number, status: ClasificadoStatus): Promise<Clasificado> {
+  async updateStatus(id: number, status: ClasificadoStatus, userId: number = 0): Promise<Clasificado> {
     if (![ClasificadoStatus.APPROVED, ClasificadoStatus.REJECTED].includes(status)) {
       throw new BadRequestException('Status must be approved or rejected')
     }
@@ -96,7 +99,16 @@ export class ClasificadosService {
     }
 
     clasificado.status = status
-    return this.clasificadoRepo.save(clasificado)
+    const saved = await this.clasificadoRepo.save(clasificado)
+
+    if (status === ClasificadoStatus.APPROVED) {
+      this.eventEmitter.emit(
+        'clasificado.approved',
+        new ClasificadoApprovedEvent(saved.id, userId),
+      )
+    }
+
+    return saved
   }
 
   async findAllAdmin(query: { page?: number; limit?: number }) {

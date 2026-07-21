@@ -10,6 +10,7 @@ import { UpdateStatusDto } from './dto/update-status.dto'
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
+import { CurrentUser } from '../common/decorators/current-user.decorator'
 import { ImageUpload } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Eventos')
@@ -69,8 +70,8 @@ export class AdminEventosController {
   @Roles('superadmin', 'admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Aprobar/rechazar evento', description: 'Cambia el estado de un evento a approved o rejected (solo admin)' })
-  async updateStatus(@Param('id') id: string, @Body() body: UpdateStatusDto) {
-    const evento = await this.eventosService.updateStatus(+id, body.status)
+  async updateStatus(@Param('id') id: string, @Body() body: UpdateStatusDto, @CurrentUser('id') userId: number) {
+    const evento = await this.eventosService.updateStatus(+id, body.status, userId)
     return { data: evento }
   }
 }

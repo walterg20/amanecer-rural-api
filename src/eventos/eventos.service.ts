@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, LessThan, MoreThanOrEqual } from 'typeorm'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Evento, EventoStatus } from './entities/evento.entity'
+import { EventoApprovedEvent } from '../common/events/evento-approved.event'
 
 @Injectable()
 export class EventosService {
   constructor(
     @InjectRepository(Evento)
     private readonly eventoRepo: Repository<Evento>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private slugify(text: string): string {
@@ -85,13 +88,21 @@ export class EventosService {
     if (result.affected === 0) throw new NotFoundException('Evento not found')
   }
 
-  async updateStatus(id: number, status: EventoStatus): Promise<Evento> {
+  async updateStatus(id: number, status: EventoStatus, userId: number = 0): Promise<Evento> {
     if (![EventoStatus.APPROVED, EventoStatus.REJECTED].includes(status)) {
       throw new BadRequestException('Status must be approved or rejected')
     }
     await this.eventoRepo.update(id, { status })
     const updated = await this.eventoRepo.findOne({ where: { id } })
     if (!updated) throw new NotFoundException('Evento not found')
+
+    if (status === EventoStatus.APPROVED) {
+      this.eventEmitter.emit(
+        'evento.approved',
+        new EventoApprovedEvent(updated.id, userId),
+      )
+    }
+
     return updated
   }
 

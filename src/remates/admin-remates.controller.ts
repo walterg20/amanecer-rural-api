@@ -14,6 +14,7 @@ import { UpdateRematadorDto } from './dto/update-rematador.dto'
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
+import { CurrentUser } from '../common/decorators/current-user.decorator'
 import { ImageUpload } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Remates')
@@ -78,6 +79,24 @@ export class AdminRematesController {
   async addLot(@Param('id') id: string, @Body() body: CreateLoteDto) {
     const lot = await this.rematesService.addLot(+id, body)
     return { data: lot }
+  }
+
+  @Post(':id/publish')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Activar remate', description: 'Cambia un remate de scheduled a in_progress' })
+  async publish(@Param('id') id: string, @CurrentUser('id') userId: number) {
+    const auction = await this.rematesService.publish(+id, userId)
+    return { data: auction }
+  }
+
+  @Post(':id/cancel')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cancelar remate', description: 'Cancela un remate (cambia a cancelled)' })
+  async cancel(@Param('id') id: string, @CurrentUser('id') userId: number) {
+    const auction = await this.rematesService.cancel(+id, userId)
+    return { data: auction }
   }
 }
 

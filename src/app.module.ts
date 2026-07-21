@@ -17,6 +17,7 @@ import { MessagingModule } from './messaging/messaging.module'
 import { StatsModule } from './stats/stats.module'
 import { CacheModule } from './cache/cache.module'
 import { QueueModule } from './queue/queue.module'
+import { SocialModule } from './social/social.module'
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { QueueModule } from './queue/queue.module'
     StatsModule,
     CacheModule,
     QueueModule,
+    SocialModule,
   ],
   controllers: [AppController],
 })

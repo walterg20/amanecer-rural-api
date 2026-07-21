@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import { Post } from '../posts/entities/post.entity'
+import { Repository, Not, Equal, Between } from 'typeorm'
+import { Post, PostStatus } from '../posts/entities/post.entity'
 import { User } from '../users/entities/user.entity'
 import { Proveedor } from '../proveedores/entities/proveedor.entity'
-import { Evento } from '../eventos/entities/evento.entity'
-import { Auction } from '../remates/entities/auction.entity'
-import { Clasificado } from '../clasificados/entities/clasificado.entity'
+import { Evento, EventoStatus } from '../eventos/entities/evento.entity'
+import { Auction, AuctionStatus } from '../remates/entities/auction.entity'
+import { Clasificado, ClasificadoStatus } from '../clasificados/entities/clasificado.entity'
 import { Transaction } from '../payments/entities/transaction.entity'
 import { CacheService } from '../cache/cache.service'
 
@@ -38,19 +38,29 @@ export class StatsService {
   async getDashboard(anio?: number) {
     const year = anio || new Date().getFullYear()
     const cacheKey = `stats:dashboard:${year}`
+    const now = new Date()
 
     return this.cache.wrap(cacheKey, async () => {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
       const [
         totalPosts, totalUsers, totalProveedores,
         totalEventos, totalRemates, totalClasificados,
+        totalPostsPublishedThisMonth,
         postsPorMes, usersPorMes, revenuePorMes,
       ] = await Promise.all([
-        this.postRepo.count(),
+        this.postRepo.count({ where: { status: PostStatus.PUBLISHED } }),
         this.userRepo.count(),
         this.proveedorRepo.count(),
-        this.eventoRepo.count(),
-        this.auctionRepo.count(),
-        this.clasificadoRepo.count(),
+        this.eventoRepo.count({ where: { status: EventoStatus.APPROVED } }),
+        this.auctionRepo.count({ where: { status: Not(Equal(AuctionStatus.CANCELLED)) } }),
+        this.clasificadoRepo.count({ where: { status: ClasificadoStatus.APPROVED } }),
+        this.postRepo.count({
+          where: {
+            status: PostStatus.PUBLISHED,
+            publishedAt: Between(startOfMonth, now),
+          },
+        }),
         this.getPostsByMonth(year),
         this.getUsersByMonth(year),
         this.getRevenueByMonth(year),
@@ -59,6 +69,9 @@ export class StatsService {
       return {
         totalPosts, totalUsers, totalProveedores,
         totalEventos, totalRemates, totalClasificados,
+        totalPostsPublishedThisMonth,
+        totalContentQueuedForSocial: 0,
+        totalContentPublishedToSocial: 0,
         postsPorMes, usersPorMes, revenuePorMes,
       }
     }, 300)
@@ -70,12 +83,13 @@ export class StatsService {
     return this.cache.wrap(`stats:posts:${year}`, async () => {
       const raw = await this.postRepo
         .createQueryBuilder('p')
-        .select("EXTRACT(MONTH FROM p.createdAt)", "mes")
-        .addSelect("EXTRACT(YEAR FROM p.createdAt)", "anio")
+        .select("EXTRACT(MONTH FROM p.publishedAt)", "mes")
+        .addSelect("EXTRACT(YEAR FROM p.publishedAt)", "anio")
         .addSelect("COUNT(*)", "count")
-        .where("EXTRACT(YEAR FROM p.createdAt) = :year", { year })
-        .groupBy("EXTRACT(YEAR FROM p.createdAt), EXTRACT(MONTH FROM p.createdAt)")
-        .orderBy("EXTRACT(MONTH FROM p.createdAt)", "ASC")
+        .where("p.status = :status", { status: PostStatus.PUBLISHED })
+        .andWhere("EXTRACT(YEAR FROM p.publishedAt) = :year", { year })
+        .groupBy("EXTRACT(YEAR FROM p.publishedAt), EXTRACT(MONTH FROM p.publishedAt)")
+        .orderBy("EXTRACT(MONTH FROM p.publishedAt)", "ASC")
         .getRawMany()
 
       return raw.map(r => ({
@@ -163,8 +177,8 @@ export class StatsService {
 
       return [
         `${header}`,
-        `=== Dashboard ===\ntotalPosts,totalUsers,totalProveedores,totalEventos,totalRemates,totalClasificados`,
-        `${data.totalPosts},${data.totalUsers},${data.totalProveedores},${data.totalEventos},${data.totalRemates},${data.totalClasificados}`,
+        `=== Dashboard ===\ntotalPosts,totalUsers,totalProveedores,totalEventos,totalRemates,totalClasificados,totalPostsPublishedThisMonth`,
+        `${data.totalPosts},${data.totalUsers},${data.totalProveedores},${data.totalEventos},${data.totalRemates},${data.totalClasificados},${data.totalPostsPublishedThisMonth}`,
         ``,
         `=== Posts por Mes ===\nanio,mes,cantidad`,
         posts,

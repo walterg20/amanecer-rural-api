@@ -1,0 +1,9 @@
+- [ ] Crear StatsModule con StatsService
+- [ ] Tabla PageView (opcional, o usar GA4 API)
+- [ ] Endpoint GET /api/v1/admin/stats/dashboard (KPIs generales)
+- [ ] Endpoint GET /api/v1/admin/stats/posts (posts por mes)
+- [ ] Endpoint GET /api/v1/admin/stats/users (registros por mes)
+- [ ] Endpoint GET /api/v1/admin/stats/revenue (ingresos por mes)
+- [ ] Exportación CSV
+- [ ] Cache en Redis TTL 5 min
+- [ ] Tests

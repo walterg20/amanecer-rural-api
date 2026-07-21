@@ -1,0 +1,9 @@
+- [ ] Crear entidades Proveedor, Rubro
+- [ ] Crear archivo de seed con ~140 rubros
+- [ ] Implementar ProveedoresService (CRUD, filtros, destacados, slug)
+- [ ] Implementar RubrosService (CRUD + seed + count)
+- [ ] Implementar controlador público (listado con filtros, detalle, destacados, rubros)
+- [ ] Implementar controlador admin (CRUD + aprobar/rechazar + destacar + upload)
+- [ ] Crear DTOs con validación
+- [ ] Registrar módulo en app.module.ts
+- [ ] Agregar decoradores Swagger

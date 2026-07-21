@@ -1,0 +1,8 @@
+- [ ] Crear entidades Clasificado, CategoriaClasificado
+- [ ] Implementar ClasificadosService (CRUD, filtros, slug, expiración)
+- [ ] Implementar CategoriaClasificadoService + seed data
+- [ ] Implementar controlador público (listar con filtros, detalle, categorías)
+- [ ] Implementar controlador admin (CRUD + aprobar/rechazar)
+- [ ] Crear DTOs con validación
+- [ ] Registrar módulo en app.module.ts
+- [ ] Agregar decoradores Swagger

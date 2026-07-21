@@ -1,0 +1,7 @@
+- [ ] Crear entidad Evento
+- [ ] Implementar EventosService (CRUD, próximos/pasados, slug)
+- [ ] Implementar controlador público (próximos, pasados, detalle)
+- [ ] Implementar controlador admin (CRUD + aprobar/rechazar + upload)
+- [ ] Crear DTOs con validación
+- [ ] Registrar módulo en app.module.ts
+- [ ] Agregar decoradores Swagger

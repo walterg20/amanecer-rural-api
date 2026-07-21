@@ -1,0 +1,8 @@
+- [ ] Crear entidades Auction, Lot, Auctioneer, AuctionMedia
+- [ ] Implementar RematesService (CRUD + filtros + slugificación)
+- [ ] Implementar AuctioneerService
+- [ ] Implementar controlador público (listar activos, detalle con lotes)
+- [ ] Implementar controlador admin (CRUD completo + upload)
+- [ ] Crear DTOs con validación
+- [ ] Registrar módulo en app.module.ts
+- [ ] Agregar decoradores Swagger en endpoints y DTOs

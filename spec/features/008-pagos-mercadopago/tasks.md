@@ -1,0 +1,8 @@
+- [ ] Instalar mercadopago SDK (mercadopago)
+- [ ] Crear entidad Transaction (user_id, amount, status, mp_preference_id, mp_payment_id, concept)
+- [ ] Configurar credenciales de MP en .env
+- [ ] Implementar creación de preferencia de pago
+- [ ] Implementar webhook IPN (actualizar estado transacción)
+- [ ] Endpoints: create-preference, webhook
+- [ ] Vincular pago con clasificado/proveedor según concepto
+- [ ] Tests

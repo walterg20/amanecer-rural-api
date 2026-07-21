@@ -1,0 +1,8 @@
+- [ ] Crear entidad Video
+- [ ] Crear archivo data/programas.ts con metadata de los 2 programas
+- [ ] Implementar VideosService (CRUD, reorden)
+- [ ] Implementar controlador público (listar, programas)
+- [ ] Implementar controlador admin (CRUD, reorder)
+- [ ] Crear DTOs con validación
+- [ ] Registrar módulo en app.module.ts
+- [ ] Agregar decoradores Swagger

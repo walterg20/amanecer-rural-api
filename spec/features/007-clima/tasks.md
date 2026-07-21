@@ -1,0 +1,9 @@
+- [ ] Crear módulo Clima con controlador y servicio
+- [ ] Implementar fetch a API externa de clima
+- [ ] Implementar estrategia de caché con Redis (TTL 30/60 min)
+- [ ] Implementar endpoint clima actual
+- [ ] Implementar endpoint pronóstico 7 días
+- [ ] Implementar endpoint lista de ciudades
+- [ ] Crear DTOs con validación
+- [ ] Registrar módulo en app.module.ts
+- [ ] Agregar decoradores Swagger

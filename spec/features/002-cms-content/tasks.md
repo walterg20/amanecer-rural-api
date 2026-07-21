@@ -1,0 +1,9 @@
+- [ ] Crear entidades Post, Category, Tag, PostTag
+- [ ] Helper de slug automático
+- [ ] CRUD de categorías
+- [ ] CRUD de posts (crear, editar, listar, soft delete)
+- [ ] Endpoints públicos: posts por slug, listar por tipo/categoría
+- [ ] Endpoints admin: CRUD completo con protección de roles
+- [ ] Subida de imágenes (multer config)
+- [ ] Paginación (page/limit)
+- [ ] Tests

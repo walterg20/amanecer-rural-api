@@ -1,0 +1,8 @@
+- [ ] Obtener dump o acceso a DB del sitio PHP actual
+- [ ] Crear script scripts/migrate.ts
+- [ ] Mapear categorías existentes a nuevas
+- [ ] Migrar posts con fechas originales
+- [ ] Migrar imágenes (descargar del servidor actual)
+- [ ] Validar: contar registros, verificar slugs, chequear imágenes
+- [ ] Idempotencia: segunda ejecución = sin duplicados
+- [ ] Log de migración

@@ -1,0 +1,801 @@
+{
+  "info": {
+    "name": "Amanecer Rural API",
+    "description": "Colección de endpoints para la API de Amanecer Rural.\n\n## Configuración inicial\n1. La variable `baseUrl` apunta a `http://localhost:3000/api/v1` por defecto.\n2. Usa el endpoint **Login** o **Register** para autenticarte — el token se guarda automáticamente.\n3. Los endpoints protegidos usan `{{accessToken}}` en el header `Authorization`.\n\n## Roles disponibles\n- `superadmin` — acceso total\n- `admin` — gestión de usuarios y contenido\n- `editor` — gestión de contenido\n- `provider` — proveedores (futuro)\n- `user` — usuario básico",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is ok', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica que el servidor esté funcionando correctamente."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": \"2025-07-17T12:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"contraseñaSegura123\",\n  \"name\": \"Juan Pérez\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra un nuevo usuario. El token se guarda automáticamente en las variables de colección."
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"email\": \"usuario@ejemplo.com\",\n    \"name\": \"Juan Pérez\",\n    \"role\": \"user\"\n  },\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIs...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"contraseñaSegura123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Inicia sesión con credenciales. El token se guarda automáticamente en las variables de colección."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 1,\n    \"email\": \"usuario@ejemplo.com\",\n    \"name\": \"Juan Pérez\",\n    \"role\": \"user\"\n  },\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIs...\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Renovar tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Renueva el access token usando el refresh token."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIs...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIs...\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Obtiene el perfil del usuario autenticado."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"email\": \"usuario@ejemplo.com\",\n    \"name\": \"Juan Pérez\",\n    \"role\": \"user\",\n    \"avatar\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Actualizar perfil",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez Actualizado\",\n  \"avatar\": \"https://ejemplo.com/avatar.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Actualiza el nombre y/o avatar del perfil del usuario autenticado."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"email\": \"usuario@ejemplo.com\",\n    \"name\": \"Juan Pérez Actualizado\",\n    \"role\": \"user\",\n    \"avatar\": \"https://ejemplo.com/avatar.jpg\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin / Usuarios",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"]
+            },
+            "description": "Lista todos los usuarios registrados. Requiere rol `superadmin` o `admin`."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"email\": \"admin@ejemplo.com\",\n      \"name\": \"Admin\",\n      \"role\": {\n        \"id\": 1,\n        \"name\": \"Superadmin\",\n        \"slug\": \"superadmin\"\n      },\n      \"active\": true\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cambiar rol de usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"editor\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/1/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users", ":id", "role"],
+              "variable": [
+                { "key": "id", "value": "1", "description": "ID del usuario a modificar" }
+              ]
+            },
+            "description": "Cambia el rol de un usuario. Roles disponibles: `superadmin`, `admin`, `editor`, `provider`, `user`."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"email\": \"usuario@ejemplo.com\",\n    \"name\": \"Juan Pérez\",\n    \"role\": {\n      \"id\": 3,\n      \"name\": \"Editor\",\n      \"slug\": \"editor\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Posts (público)",
+      "item": [
+        {
+          "name": "Listar artículos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?type=news&category=agricultura&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["posts"],
+              "query": [
+                { "key": "type", "value": "news", "description": "Filtrar por tipo: news, tech_note, magazine" },
+                { "key": "category", "value": "agricultura", "description": "Filtrar por slug de categoría" },
+                { "key": "tag", "value": "", "description": "Filtrar por slug de etiqueta" },
+                { "key": "page", "value": "1", "description": "Número de página" },
+                { "key": "limit", "value": "10", "description": "Items por página" }
+              ]
+            },
+            "description": "Lista artículos publicados con filtros y paginación."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"title\": \"Nueva variedad de soja resistente a sequía\",\n      \"slug\": \"nueva-variedad-de-soja-resistente-a-sequia\",\n      \"excerpt\": \"Breve descripción del artículo...\",\n      \"type\": \"news\",\n      \"status\": \"published\",\n      \"category\": { \"id\": 1, \"name\": \"Agricultura\", \"slug\": \"agricultura\" },\n      \"author\": { \"id\": 1, \"name\": \"Juan Pérez\" },\n      \"tags\": [{ \"id\": 1, \"name\": \"soja\", \"slug\": \"soja\" }],\n      \"featuredImage\": \"/uploads/imagen.jpg\",\n      \"publishedAt\": \"2025-07-17T12:00:00.000Z\",\n      \"createdAt\": \"2025-07-17T12:00:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Obtener artículo por slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/nueva-variedad-de-soja-resistente-a-sequia",
+              "host": ["{{baseUrl}}"],
+              "path": ["posts", ":slug"],
+              "variable": [
+                { "key": "slug", "value": "nueva-variedad-de-soja-resistente-a-sequia", "description": "Slug del artículo" }
+              ]
+            },
+            "description": "Obtiene un artículo individual por su slug."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"Nueva variedad de soja resistente a sequía\",\n    \"slug\": \"nueva-variedad-de-soja-resistente-a-sequia\",\n    \"content\": \"<p>Contenido completo del artículo...</p>\",\n    \"excerpt\": \"Breve descripción del artículo...\",\n    \"type\": \"news\",\n    \"status\": \"published\",\n    \"category\": { \"id\": 1, \"name\": \"Agricultura\", \"slug\": \"agricultura\" },\n    \"author\": { \"id\": 1, \"name\": \"Juan Pérez\" },\n    \"tags\": [{ \"id\": 1, \"name\": \"soja\", \"slug\": \"soja\" }],\n    \"featuredImage\": \"/uploads/imagen.jpg\",\n    \"publishedAt\": \"2025-07-17T12:00:00.000Z\",\n    \"createdAt\": \"2025-07-17T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar categorías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            },
+            "description": "Devuelve todas las categorías de contenido con sus subcategorías."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Agricultura\",\n    \"slug\": \"agricultura\",\n    \"description\": \"Artículos sobre agricultura y cultivos\",\n    \"children\": []\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Listar etiquetas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tags",
+              "host": ["{{baseUrl}}"],
+              "path": ["tags"]
+            },
+            "description": "Devuelve todas las etiquetas de contenido."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"soja\",\n    \"slug\": \"soja\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"ganadería\",\n    \"slug\": \"ganaderia\"\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin / Posts",
+      "item": [
+        {
+          "name": "Subir imagen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "",
+                  "description": "Archivo de imagen (jpeg, png, gif, webp, máx. 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/posts/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "posts", "upload"]
+            },
+            "description": "Sube una imagen para usar en artículos. Requiere rol `superadmin`, `admin` o `editor`."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"url\": \"/uploads/uuid-imagen.jpg\",\n    \"filename\": \"uuid-imagen.jpg\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Crear artículo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nueva variedad de soja resistente a sequía\",\n  \"content\": \"<p>Investigadores del INTA desarrollaron una nueva variedad de soja con mayor resistencia a condiciones de sequía extrema, lo que promete mejorar los rendimientos en zonas áridas.</p>\",\n  \"excerpt\": \"Investigadores del INTA desarrollaron una nueva variedad de soja resistente a sequía.\",\n  \"type\": \"news\",\n  \"status\": \"draft\",\n  \"categoryId\": 1,\n  \"tagIds\": [1, 2],\n  \"featuredImage\": \"/uploads/uuid-imagen.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/posts",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "posts"]
+            },
+            "description": "Crea un nuevo artículo. Requiere rol `superadmin`, `admin` o `editor`."
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"Nueva variedad de soja resistente a sequía\",\n    \"slug\": \"nueva-variedad-de-soja-resistente-a-sequia\",\n    \"content\": \"<p>Investigadores del INTA...</p>\",\n    \"excerpt\": \"Investigadores del INTA desarrollaron...\",\n    \"type\": \"news\",\n    \"status\": \"draft\",\n    \"categoryId\": 1,\n    \"authorId\": 1,\n    \"tagIds\": [1, 2],\n    \"featuredImage\": \"/uploads/uuid-imagen.jpg\",\n    \"createdAt\": \"2025-07-17T12:00:00.000Z\",\n    \"updatedAt\": \"2025-07-17T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar todos los artículos (admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/posts?page=1&limit=10&status=draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "posts"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "draft", "description": "Filtrar por estado: draft, published, archived" },
+                { "key": "type", "value": "", "description": "Filtrar por tipo: news, tech_note, magazine" },
+                { "key": "category", "value": "", "description": "Filtrar por slug de categoría" },
+                { "key": "tag", "value": "", "description": "Filtrar por slug de etiqueta" }
+              ]
+            },
+            "description": "Lista todos los artículos, incluyendo borradores. Requiere rol `superadmin`, `admin` o `editor`."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"title\": \"Nueva variedad de soja resistente a sequía\",\n      \"slug\": \"nueva-variedad-de-soja-resistente-a-sequia\",\n      \"type\": \"news\",\n      \"status\": \"draft\",\n      \"category\": { \"id\": 1, \"name\": \"Agricultura\", \"slug\": \"agricultura\" },\n      \"author\": { \"id\": 1, \"name\": \"Juan Pérez\" },\n      \"createdAt\": \"2025-07-17T12:00:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Actualizar artículo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nueva variedad de soja resistente a sequía (actualizado)\",\n  \"status\": \"published\",\n  \"categoryId\": 1,\n  \"tagIds\": [1, 2, 3]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/posts/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "posts", ":id"],
+              "variable": [
+                { "key": "id", "value": "1", "description": "ID del artículo a actualizar" }
+              ]
+            },
+            "description": "Actualiza un artículo existente. Requiere rol `superadmin`, `admin` o `editor`."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"Nueva variedad de soja resistente a sequía (actualizado)\",\n    \"slug\": \"nueva-variedad-de-soja-resistente-a-sequia\",\n    \"status\": \"published\",\n    \"categoryId\": 1,\n    \"updatedAt\": \"2025-07-17T12:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eliminar artículo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/posts/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "posts", ":id"],
+              "variable": [
+                { "key": "id", "value": "1", "description": "ID del artículo a eliminar" }
+              ]
+            },
+            "description": "Elimina un artículo (soft delete). Requiere rol `superadmin`, `admin` o `editor`."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"deleted\": true\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin / Categorías",
+      "item": [
+        {
+          "name": "Crear categoría",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Agricultura\",\n  \"description\": \"Artículos sobre agricultura y cultivos\",\n  \"parentId\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "categories"]
+            },
+            "description": "Crea una nueva categoría de contenido. Requiere rol `superadmin`, `admin` o `editor`."
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Agricultura\",\n    \"slug\": \"agricultura\",\n    \"description\": \"Artículos sobre agricultura y cultivos\",\n    \"parentId\": null\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pagos",
+      "item": [
+        {
+          "name": "Crear preferencia de pago",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1500,\n  \"title\": \"Anuncio clasificado - Venta tractor\",\n  \"description\": \"Publicación destacada por 30 días\",\n  \"conceptType\": \"classified\",\n  \"conceptId\": 42\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/create-preference",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "create-preference"]
+            },
+            "description": "Crea una preferencia de pago en Mercado Pago. Requiere autenticación."
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": {\n    \"preferenceId\": \"123456789\",\n    \"initPoint\": \"https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=123456789\",\n    \"sandboxInitPoint\": \"https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=123456789\",\n    \"transactionId\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Webhook de pagos",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"payment.created\",\n  \"api_version\": \"v1\",\n  \"data\": {\n    \"id\": \"123456789\"\n  },\n  \"date_created\": \"2025-07-17T12:00:00.000Z\",\n  \"id\": \"987654321\",\n  \"live_mode\": false,\n  \"type\": \"payment\",\n  \"user_id\": \"12345\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "webhook"]
+            },
+            "description": "Endpoint IPN de Mercado Pago para recibir notificaciones de pago. No requiere autenticación."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"ok\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar transacciones",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{accessToken}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "transactions"]
+            },
+            "description": "Obtiene el historial de transacciones del usuario autenticado."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"amount\": 1500,\n      \"status\": \"approved\",\n      \"title\": \"Anuncio clasificado - Venta tractor\",\n      \"mpPreferenceId\": \"123456789\",\n      \"mpPaymentId\": 987654321,\n      \"conceptType\": \"classified\",\n      \"conceptId\": 42,\n      \"createdAt\": \"2025-07-17T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

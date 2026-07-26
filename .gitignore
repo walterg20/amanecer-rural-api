@@ -3,5 +3,5 @@ dist/
 .env
 *.log
 uploads/
-data/
+/data/
 

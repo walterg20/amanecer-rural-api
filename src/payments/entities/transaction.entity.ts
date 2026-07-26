@@ -16,8 +16,8 @@ export class Transaction {
   @PrimaryGeneratedColumn()
   id!: number
 
-  @Column({ name: 'user_id' })
-  userId!: number
+  @Column({ name: 'user_id', nullable: true })
+  userId?: number
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

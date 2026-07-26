@@ -11,7 +11,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { ImageUpload } from '../common/decorators/upload.interceptor'
+import { ImageUpload, saveUploadedFile } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Eventos')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,7 +28,7 @@ export class AdminEventosController {
   @UseInterceptors(ImageUpload('image'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('La imagen es requerida')
-    return { data: { url: `/uploads/${file.filename}`, filename: file.filename } }
+    return { data: saveUploadedFile(file) }
   }
 
   @Post()
@@ -46,6 +46,15 @@ export class AdminEventosController {
   @ApiOperation({ summary: 'Listar todos los eventos', description: 'Devuelve todos los eventos incluyendo pendientes (solo admin)' })
   async findAll(@Query() query: any) {
     return this.eventosService.findAllAdmin(query)
+  }
+
+  @Get(':id')
+  @Roles('superadmin', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener evento por ID', description: 'Devuelve un evento individual por su ID (solo admin)' })
+  async findOne(@Param('id') id: string) {
+    const evento = await this.eventosService.findOne(+id)
+    return { data: evento }
   }
 
   @Patch(':id')

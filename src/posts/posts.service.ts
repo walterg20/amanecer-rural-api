@@ -20,6 +20,10 @@ export class PostsService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  async findPublished(query: { type?: string; category?: string; page?: number; limit?: number }) {
+    return this.findAll({ ...query, status: 'published' })
+  }
+
   async findAll(query: { type?: string; category?: string; status?: string; page?: number; limit?: number }) {
     const { type, category, status, page = 1, limit = 10 } = query
     const qb = this.postRepo.createQueryBuilder('post')
@@ -30,7 +34,6 @@ export class PostsService {
     if (type) qb.andWhere('post.type = :type', { type })
     if (category) qb.andWhere('category.slug = :category', { category })
     if (status) qb.andWhere('post.status = :status', { status })
-    else qb.andWhere('post.status = :defaultStatus', { defaultStatus: PostStatus.PUBLISHED })
 
     qb.orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
@@ -38,6 +41,15 @@ export class PostsService {
 
     const [data, total] = await qb.getManyAndCount()
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } }
+  }
+
+  async findOne(id: number): Promise<Post> {
+    const post = await this.postRepo.findOne({
+      where: { id },
+      relations: { category: true, author: true, tags: true },
+    })
+    if (!post) throw new NotFoundException('Post not found')
+    return post
   }
 
   async findBySlug(slug: string): Promise<Post> {
@@ -124,8 +136,57 @@ export class PostsService {
     return this.categoryRepo.save(category)
   }
 
+  async findCategory(id: number): Promise<Category> {
+    const category = await this.categoryRepo.findOne({
+      where: { id },
+      relations: { children: true },
+    })
+    if (!category) throw new NotFoundException('Category not found')
+    return category
+  }
+
   async findAllCategories() {
     return this.categoryRepo.find({ relations: { children: true } })
+  }
+
+  async findAllCategoriesAdmin(query: { page?: number; limit?: number }) {
+    const { page, limit } = query
+    const hasPagination = page !== undefined || limit !== undefined
+
+    if (!hasPagination) {
+      const data = await this.categoryRepo.find({ relations: { children: true }, order: { name: 'ASC' } })
+      return { data }
+    }
+
+    const p = page ?? 1
+    const l = limit ?? 10
+    const qb = this.categoryRepo.createQueryBuilder('cat')
+      .leftJoinAndSelect('cat.children', 'children')
+      .orderBy('cat.name', 'ASC')
+      .skip((p - 1) * l)
+      .take(l)
+
+    const [data, total] = await qb.getManyAndCount()
+    return { data, meta: { total, page: p, limit: l, totalPages: Math.ceil(total / l) } }
+  }
+
+  async updateCategory(id: number, data: Partial<Category>): Promise<Category> {
+    const updateData = { ...data }
+    if (data.name) {
+      updateData.slug = data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+    }
+    await this.categoryRepo.update(id, updateData)
+    const updated = await this.categoryRepo.findOne({ where: { id } })
+    if (!updated) throw new NotFoundException('Categoría no encontrada')
+    return updated
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    const result = await this.categoryRepo.delete(id)
+    if (result.affected === 0) throw new NotFoundException('Categoría no encontrada')
   }
 
   async findAllTags() {

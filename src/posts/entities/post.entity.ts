@@ -75,6 +75,9 @@ export class Post {
   @Column({ nullable: true })
   featuredImage?: string
 
+  @Column({ nullable: true, type: 'varchar', length: 255 })
+  fuente?: string
+
   @Column({ name: 'published_at', nullable: true })
   publishedAt?: Date
 

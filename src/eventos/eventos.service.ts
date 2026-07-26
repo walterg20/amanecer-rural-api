@@ -60,6 +60,14 @@ export class EventosService {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } }
   }
 
+  async findOne(id: number): Promise<Evento> {
+    const evento = await this.eventoRepo.findOne({
+      where: { id },
+    })
+    if (!evento) throw new NotFoundException('Evento no encontrado')
+    return evento
+  }
+
   async findBySlug(slug: string): Promise<Evento> {
     const evento = await this.eventoRepo.findOne({ where: { slug } })
     if (!evento) throw new NotFoundException('Evento not found')
@@ -104,6 +112,10 @@ export class EventosService {
     }
 
     return updated
+  }
+
+  async createPublic(data: Partial<Evento>): Promise<Evento> {
+    return this.create({ ...data, status: EventoStatus.PENDING })
   }
 
   async findAllAdmin(query: { page?: number; limit?: number }) {

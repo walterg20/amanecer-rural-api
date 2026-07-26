@@ -11,7 +11,7 @@ export class PostsController {
   @Get('posts')
   @ApiOperation({ summary: 'Listar artículos', description: 'Devuelve artículos publicados con filtros y paginación' })
   async findAll(@Query() query: QueryPostsDto) {
-    return this.postsService.findAll(query)
+    return this.postsService.findPublished(query)
   }
 
   @Get('posts/:slug')
@@ -24,7 +24,8 @@ export class PostsController {
   @Get('categories')
   @ApiOperation({ summary: 'Listar categorías', description: 'Devuelve todas las categorías de contenido' })
   async categories() {
-    return this.postsService.findAllCategories()
+    const data = await this.postsService.findAllCategories()
+    return { data }
   }
 
   @Get('tags')

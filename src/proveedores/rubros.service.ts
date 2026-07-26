@@ -32,6 +32,30 @@ export class RubrosService implements OnModuleInit {
     })
   }
 
+  async findAllAdmin(query: { page?: number; limit?: number }) {
+    const { page, limit } = query
+    const hasPagination = page !== undefined || limit !== undefined
+
+    if (!hasPagination) {
+      const data = await this.rubroRepo.find({
+        order: { nombre: 'ASC' },
+        relations: { proveedores: true },
+      })
+      return { data }
+    }
+
+    const p = page ?? 1
+    const l = limit ?? 10
+    const qb = this.rubroRepo.createQueryBuilder('rubro')
+      .leftJoinAndSelect('rubro.proveedores', 'proveedores')
+      .orderBy('rubro.nombre', 'ASC')
+      .skip((p - 1) * l)
+      .take(l)
+
+    const [data, total] = await qb.getManyAndCount()
+    return { data, meta: { total, page: p, limit: l, totalPages: Math.ceil(total / l) } }
+  }
+
   async findOne(id: number): Promise<Rubro> {
     const rubro = await this.rubroRepo.findOne({ where: { id } })
     if (!rubro) throw new NotFoundException('Rubro not found')

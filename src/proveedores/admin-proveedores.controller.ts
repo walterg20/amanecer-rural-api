@@ -11,10 +11,11 @@ import { UpdateStatusDto } from './dto/update-status.dto'
 import { ToggleDestacadoDto } from './dto/toggle-destacado.dto'
 import { CreateRubroDto } from './dto/create-rubro.dto'
 import { UpdateRubroDto } from './dto/update-rubro.dto'
+import { QueryRubrosDto } from './dto/query-rubros.dto'
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
-import { ImageUpload } from '../common/decorators/upload.interceptor'
+import { ImageUpload, saveUploadedFile } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Proveedores')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,7 +34,7 @@ export class AdminProveedoresController {
   @UseInterceptors(ImageUpload('image'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('La imagen es requerida')
-    return { data: { url: `/uploads/${file.filename}`, filename: file.filename } }
+    return { data: saveUploadedFile(file) }
   }
 
   @Post()
@@ -51,6 +52,15 @@ export class AdminProveedoresController {
   @ApiOperation({ summary: 'Listar todos', description: 'Devuelve todos los proveedores incluyendo pendientes (solo admin)' })
   async findAll(@Query() query: any) {
     return this.proveedoresService.findAllAdmin(query)
+  }
+
+  @Get(':id')
+  @Roles('superadmin', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener proveedor por ID', description: 'Devuelve un proveedor individual por su ID (solo admin)' })
+  async findOne(@Param('id') id: string) {
+    const proveedor = await this.proveedoresService.findOne(+id)
+    return { data: proveedor }
   }
 
   @Patch(':id')
@@ -95,6 +105,23 @@ export class AdminProveedoresController {
 @Controller('admin/rubros')
 export class AdminRubrosController {
   constructor(private readonly rubrosService: RubrosService) {}
+
+  @Get()
+  @Roles('superadmin', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Listar rubros', description: 'Devuelve todos los rubros. Opcionalmente paginados con ?page=1&limit=10' })
+  async findAll(@Query() query: QueryRubrosDto) {
+    return this.rubrosService.findAllAdmin(query)
+  }
+
+  @Get(':id')
+  @Roles('superadmin', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener rubro por ID', description: 'Devuelve un rubro individual por su ID (solo admin)' })
+  async findOne(@Param('id') id: string) {
+    const rubro = await this.rubrosService.findOne(+id)
+    return { data: rubro }
+  }
 
   @Post()
   @Roles('superadmin', 'admin')

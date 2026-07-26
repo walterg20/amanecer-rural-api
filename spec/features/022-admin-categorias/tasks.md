@@ -1,0 +1,5 @@
+- [ ] Crear `QueryCategoriesDto` en `src/posts/dto/query-categories.dto.ts`
+- [ ] Agregar método `findAllCategoriesAdmin()` en `PostsService`
+- [ ] Agregar endpoint `GET /admin/categories` en `AdminCategoriesController`
+- [ ] Verificar compilación con `npm run build`
+- [ ] Verificar lint con `npm run lint`

@@ -11,7 +11,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { ImageUpload } from '../common/decorators/upload.interceptor'
+import { ImageUpload, saveUploadedFile } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Clasificados')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,7 +28,7 @@ export class AdminClasificadosController {
   @UseInterceptors(ImageUpload('image'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('La imagen es requerida')
-    return { data: { url: `/uploads/${file.filename}`, filename: file.filename } }
+    return { data: saveUploadedFile(file) }
   }
 
   @Post()

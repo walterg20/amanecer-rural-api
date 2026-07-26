@@ -3,20 +3,36 @@ import { ValidationPipe } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
 import * as express from 'express'
+import helmet from 'helmet'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, { bodyParser: false })
 
   const uploadsDir = join(process.cwd(), 'uploads')
   if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true })
 
   app.setGlobalPrefix('api/v1')
 
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }))
+
+  app.use(express.json({
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf.toString()
+    },
+  }))
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env.NODE_ENV === 'production'
+      ? process.env.CORS_ORIGIN?.split(',').map(s => s.trim()) || 'https://amanecerrural.com'
+      : '*',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 
   app.useGlobalPipes(

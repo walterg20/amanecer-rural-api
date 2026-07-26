@@ -17,6 +17,24 @@ export class RematesService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  async findTipos(): Promise<{ slug: string; type: string; nombre: string; desc: string; count: number }[]> {
+    const qb = this.auctionRepo.createQueryBuilder('a')
+      .select('a.type', 'type')
+      .addSelect('COUNT(a.id)', 'count')
+      .where('a.status != :cancelled', { cancelled: AuctionStatus.CANCELLED })
+      .groupBy('a.type')
+      .orderBy('COUNT(a.id)', 'DESC')
+
+    const rows = await qb.getRawMany()
+    return rows.map((r: any) => ({
+      slug: r.type.toLowerCase().replace(/\s+/g, '-'),
+      type: r.type,
+      nombre: r.type.charAt(0).toUpperCase() + r.type.slice(1),
+      desc: `Explora nuestros remates de tipo ${r.type}`,
+      count: parseInt(r.count, 10),
+    }))
+  }
+
   async publish(id: number, userId: number): Promise<Auction> {
     const auction = await this.auctionRepo.findOne({ where: { id } })
     if (!auction) throw new NotFoundException('Remate not found')
@@ -83,6 +101,16 @@ export class RematesService {
 
     const [data, total] = await qb.getManyAndCount()
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } }
+  }
+
+  async findOne(id: number): Promise<Auction> {
+    const auction = await this.auctionRepo.findOne({
+      where: { id },
+      relations: { auctioneer: true, lots: true },
+      order: { lots: { orden: 'ASC' as const } },
+    })
+    if (!auction) throw new NotFoundException('Remate no encontrado')
+    return auction
   }
 
   async findBySlug(slug: string): Promise<Auction> {

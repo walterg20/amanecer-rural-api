@@ -12,6 +12,12 @@ export class RematesController {
     private readonly auctioneerService: AuctioneerService,
   ) {}
 
+  @Get('remates/tipos')
+  @ApiOperation({ summary: 'Listar tipos de remate', description: 'Devuelve los tipos de remate disponibles agrupados desde la BD' })
+  async findTipos() {
+    return this.rematesService.findTipos()
+  }
+
   @Get('remates')
   @ApiOperation({ summary: 'Listar remates', description: 'Devuelve remates activos con filtros por tipo, provincia, estado y rango de fechas' })
   async findAll(@Query() query: QueryRematesDto) {

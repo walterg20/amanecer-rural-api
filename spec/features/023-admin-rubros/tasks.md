@@ -1,0 +1,5 @@
+- [x] Crear `QueryRubrosDto` en `src/proveedores/dto/query-rubros.dto.ts`
+- [x] Agregar método `findAllAdmin()` en `RubrosService`
+- [x] Agregar endpoint `GET /admin/rubros` en `AdminRubrosController`
+- [x] Agregar endpoint `GET /admin/rubros/:id` en `AdminRubrosController`
+- [x] Verificar compilación con `npm run build`

@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { EventEmitterModule } from '@nestjs/event-emitter'
+import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AuthModule } from './auth/auth.module'
 import { UsersModule } from './users/users.module'
@@ -18,11 +21,17 @@ import { StatsModule } from './stats/stats.module'
 import { CacheModule } from './cache/cache.module'
 import { QueueModule } from './queue/queue.module'
 import { SocialModule } from './social/social.module'
+import { SubscriptionsModule } from './subscriptions/subscriptions.module'
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: process.env.NODE_ENV === 'production' ? 30 : 100,
+    }]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -52,7 +61,14 @@ import { SocialModule } from './social/social.module'
     CacheModule,
     QueueModule,
     SocialModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

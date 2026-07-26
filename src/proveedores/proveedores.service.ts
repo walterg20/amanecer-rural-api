@@ -54,6 +54,15 @@ export class ProveedoresService {
     return { data, meta: { total } }
   }
 
+  async findOne(id: number): Promise<Proveedor> {
+    const proveedor = await this.proveedorRepo.findOne({
+      where: { id },
+      relations: { rubro: true },
+    })
+    if (!proveedor) throw new NotFoundException('Proveedor no encontrado')
+    return proveedor
+  }
+
   async findBySlug(slug: string): Promise<Proveedor> {
     const proveedor = await this.proveedorRepo.findOne({
       where: { slug, status: ProveedorStatus.APPROVED },

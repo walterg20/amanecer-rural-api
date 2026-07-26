@@ -15,7 +15,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { ImageUpload } from '../common/decorators/upload.interceptor'
+import { ImageUpload, saveUploadedFile } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Remates')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -34,7 +34,7 @@ export class AdminRematesController {
   @UseInterceptors(ImageUpload('image'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('La imagen es requerida')
-    return { data: { url: `/uploads/${file.filename}`, filename: file.filename } }
+    return { data: saveUploadedFile(file) }
   }
 
   @Post()
@@ -52,6 +52,15 @@ export class AdminRematesController {
   @ApiOperation({ summary: 'Listar todos', description: 'Devuelve todos los remates incluyendo eliminados (solo admin/editor)' })
   async findAll(@Query() query: any) {
     return this.rematesService.findAllAdmin(query)
+  }
+
+  @Get(':id')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener remate por ID', description: 'Devuelve un remate individual por su ID (solo admin/editor)' })
+  async findOne(@Param('id') id: string) {
+    const auction = await this.rematesService.findOne(+id)
+    return { data: auction }
   }
 
   @Patch(':id')

@@ -45,4 +45,9 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   featuredImage?: string
+
+  @ApiPropertyOptional({ example: 'Chaco Día por día', description: 'Fuente de la información' })
+  @IsOptional()
+  @IsString()
+  fuente?: string
 }

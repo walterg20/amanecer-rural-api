@@ -4,11 +4,13 @@ import { PostsService } from './posts.service'
 import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
 import { CreateCategoryDto } from './dto/create-category.dto'
+import { UpdateCategoryDto } from './dto/update-category.dto'
+import { QueryCategoriesDto } from './dto/query-categories.dto'
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../common/guards/roles.guard'
 import { Roles } from '../common/decorators/roles.decorator'
 import { CurrentUser } from '../common/decorators/current-user.decorator'
-import { ImageUpload } from '../common/decorators/upload.interceptor'
+import { ImageUpload, saveUploadedFile } from '../common/decorators/upload.interceptor'
 
 @ApiTags('Admin / Posts')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -26,7 +28,7 @@ export class AdminPostsController {
   @UseInterceptors(ImageUpload('image'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('La imagen es requerida')
-    return { data: { url: `/uploads/${file.filename}`, filename: file.filename } }
+    return { data: saveUploadedFile(file) }
   }
 
   @Post()
@@ -44,6 +46,15 @@ export class AdminPostsController {
   @ApiOperation({ summary: 'Listar todos los artículos', description: 'Devuelve todos los artículos incluyendo borradores (solo admin/editor)' })
   async findAll(@Query() query: any) {
     return this.postsService.findAll(query)
+  }
+
+  @Get(':id')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener artículo por ID', description: 'Devuelve un artículo individual por su ID (solo admin/editor)' })
+  async findOne(@Param('id') id: string) {
+    const post = await this.postsService.findOne(+id)
+    return { data: post }
   }
 
   @Patch(':id')
@@ -89,6 +100,23 @@ export class AdminPostsController {
 export class AdminCategoriesController {
   constructor(private readonly postsService: PostsService) {}
 
+  @Get()
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Listar categorías', description: 'Devuelve todas las categorías. Opcionalmente paginadas con ?page=1&limit=10' })
+  async findAll(@Query() query: QueryCategoriesDto) {
+    return this.postsService.findAllCategoriesAdmin(query)
+  }
+
+  @Get(':id')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener categoría por ID', description: 'Devuelve una categoría individual por su ID (solo admin/editor)' })
+  async findOne(@Param('id') id: string) {
+    const category = await this.postsService.findCategory(+id)
+    return { data: category }
+  }
+
   @Post()
   @Roles('superadmin', 'admin', 'editor')
   @ApiBearerAuth()
@@ -96,5 +124,23 @@ export class AdminCategoriesController {
   async create(@Body() body: CreateCategoryDto) {
     const category = await this.postsService.createCategory(body)
     return { data: category }
+  }
+
+  @Patch(':id')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar categoría', description: 'Actualiza una categoría existente (solo admin/editor)' })
+  async update(@Param('id') id: string, @Body() body: UpdateCategoryDto) {
+    const category = await this.postsService.updateCategory(+id, body)
+    return { data: category }
+  }
+
+  @Delete(':id')
+  @Roles('superadmin', 'admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar categoría', description: 'Elimina una categoría (solo admin/editor)' })
+  async remove(@Param('id') id: string) {
+    await this.postsService.deleteCategory(+id)
+    return { data: { id: +id, deleted: true } }
   }
 }

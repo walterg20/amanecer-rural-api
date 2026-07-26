@@ -1,0 +1,23 @@
+# Tasks — Suscripciones con Mercado Pago
+
+- [ ] Instalar @nestjs/schedule
+- [ ] Crear entidad SubscriptionPlan (name, type enum, duration_days, price, is_active)
+- [ ] Crear entidad Subscription (plan_id FK, name, email, phone, status enum, period_start/end)
+- [ ] Crear entidad SubscriptionPayment (subscription_id FK, transaction_id, amount, period_start/end)
+- [ ] Crear entidad SubscriptionStatusHistory (subscription_id FK, from_status, to_status, reason)
+- [ ] Crear DTOs: CreateSubscriptionPlanDto, UpdateSubscriptionPlanDto
+- [ ] Crear DTOs: CreateSubscriptionDto, UpdateSubscriptionStatusDto, QuerySubscriptionsDto
+- [ ] Crear eventos: SubscriptionActivatedEvent, SubscriptionRenewedEvent, SubscriptionExpiredEvent, SubscriptionCancelledEvent
+- [ ] Implementar SubscriptionsService.create() — crea pending_payment
+- [ ] Implementar SubscriptionsService.activate() — status=active + payment + history
+- [ ] Implementar SubscriptionsService.renew() — extiende período
+- [ ] Implementar SubscriptionsService.cancel() — cambia status
+- [ ] Implementar SubscriptionsService.listPlans() — solo activos
+- [ ] Implementar SubscriptionsService.getDetail() — incluye payments + history
+- [ ] Implementar SubscriptionsController (público: plans, create, detail, renew)
+- [ ] Implementar AdminSubscriptionsController (CRUD plans + list/status subscriptions)
+- [ ] Agregar escucha de evento payment.processed -> activar suscripcion si conceptType='subscription'
+- [ ] Agregar tarea cron @daily para renovaciones próximas (7 días antes del vencimiento)
+- [ ] Seed data con 6 planes iniciales
+- [ ] Agregar SubscriptionsModule + ScheduleModule en app.module.ts
+- [ ] Verificar compilación

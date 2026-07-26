@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "project-management/skills/scrum-master/SKILL.md",
       "computedHash": "4bf6de50ffb484e62f18cda498f9ee06932d43c57668609c7282d2aaa6432b26"
+    },
+    "security-review": {
+      "source": "getsentry/skills",
+      "sourceType": "github",
+      "skillPath": "skills/security-review/SKILL.md",
+      "computedHash": "ec9792f5fd065e020c48ab5a57707c83435c286c449ba98dfa726d7b1842c868"
     }
   }
 }

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsInt, IsEmail, MinLength, MaxLength } from 'class-validator'
+import { IsString, IsOptional, IsEnum, IsInt, IsEmail, IsBoolean, MinLength, MaxLength } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { ProveedorPlan } from '../entities/proveedor.entity'
 
@@ -61,4 +61,9 @@ export class CreateProveedorDto {
   @IsOptional()
   @IsEnum(ProveedorPlan)
   plan?: ProveedorPlan
+
+  @ApiPropertyOptional({ example: true, description: 'Estado destacado del proveedor' })
+  @IsOptional()
+  @IsBoolean()
+  destacado?: boolean
 }

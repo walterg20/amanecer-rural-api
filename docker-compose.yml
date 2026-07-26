@@ -25,20 +25,6 @@ services:
     networks:
       - ar-network
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: amanecer-rural-pgadmin
-    restart: unless-stopped
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@amanecerrural.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    depends_on:
-      - postgres
-    networks:
-      - ar-network
-
 volumes:
   pgdata:
   redisdata:

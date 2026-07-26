@@ -22,6 +22,7 @@ import { BullBoardAuthMiddleware } from './bull-board-auth.middleware'
         connection: {
           host: config.get<string>('REDIS_HOST', 'localhost'),
           port: config.get<number>('REDIS_PORT', 6379),
+          password: config.get<string>('REDIS_PASSWORD') || undefined,
         },
       }),
       inject: [ConfigService],

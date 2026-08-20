@@ -59,6 +59,18 @@ export class ClasificadosService {
     return this.clasificadoRepo.save(clasificado)
   }
 
+  async createPublic(data: Partial<Clasificado>): Promise<Clasificado> {
+    const slug = data.title ? this.slugify(data.title) : ''
+    const { payment_method, captchaToken, ...clasificadoData } = data as Record<string, unknown>
+    const clasificado = this.clasificadoRepo.create({
+      ...(clasificadoData as Partial<Clasificado>),
+      slug,
+      plan: data.plan ?? ClasificadoPlan.GRATIS,
+      status: ClasificadoStatus.PENDING,
+    })
+    return this.clasificadoRepo.save(clasificado)
+  }
+
   async update(id: number, data: Partial<Clasificado>): Promise<Clasificado> {
     const updateData = { ...data }
     if (data.title) {

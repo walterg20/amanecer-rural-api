@@ -1,4 +1,5 @@
 import { IsString, IsOptional, IsEnum, IsInt, IsNumber, IsArray, IsEmail, IsIn, Min, MinLength, MaxLength } from 'class-validator'
+import { Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { ClasificadoCondicion, ClasificadoPlan } from '../entities/clasificado.entity'
 
@@ -18,12 +19,14 @@ export class CreateClasificadoPublicDto {
 
   @ApiProperty({ example: 1, description: 'ID de la categoría' })
   @IsInt()
+  @Type(() => Number)
   categoriaId!: number
 
   @ApiPropertyOptional({ example: 25000, description: 'Precio' })
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Type(() => Number)
   price?: number
 
   @ApiPropertyOptional({ enum: ClasificadoCondicion, example: ClasificadoCondicion.NUEVO, description: 'Condición' })

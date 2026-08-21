@@ -50,6 +50,21 @@ export class Evento {
   @Column({ nullable: true })
   image?: string
 
+  @Column({ nullable: true })
+  logo?: string
+
+  @Column({ nullable: true })
+  afiche?: string
+
+  @Column({ nullable: true })
+  pdf?: string
+
+  @Column({ nullable: true })
+  audio?: string
+
+  @Column({ type: 'jsonb', nullable: true })
+  galeria?: string[]
+
   @Column({
     type: 'enum',
     enum: EventoPlan,

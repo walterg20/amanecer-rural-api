@@ -115,7 +115,8 @@ export class EventosService {
   }
 
   async createPublic(data: Partial<Evento>): Promise<Evento> {
-    return this.create({ ...data, status: EventoStatus.PENDING })
+    const { payment_method, captchaToken, ...eventoData } = data as Record<string, unknown>
+    return this.create({ ...(eventoData as Partial<Evento>), status: EventoStatus.PENDING })
   }
 
   async findAllAdmin(query: { page?: number; limit?: number }) {

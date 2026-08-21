@@ -83,4 +83,14 @@ export class CreateEventoPublicDto {
   @IsArray()
   @IsString({ each: true })
   galeria?: string[]
+
+  @ApiPropertyOptional({ enum: ['mercadopago', 'transferencia'], description: 'Método de pago elegido' })
+  @IsOptional()
+  @IsIn(['mercadopago', 'transferencia'])
+  payment_method?: string
+
+  @ApiPropertyOptional({ description: 'Token de Cloudflare Turnstile' })
+  @IsOptional()
+  @IsString()
+  captchaToken?: string
 }

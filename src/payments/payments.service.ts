@@ -134,10 +134,17 @@ export class PaymentsService {
       const status = this.mapStatus(paymentResponse.status ?? 'pending')
 
       if (paymentResponse.external_reference) {
-        await this.transactionRepo.update(
-          { id: Number(paymentResponse.external_reference) },
-          { status, mpPaymentId: paymentId },
-        )
+        const transactionId = Number(paymentResponse.external_reference)
+        const transaction = await this.transactionRepo.findOne({ where: { id: transactionId } })
+        if (transaction) {
+          await this.transactionRepo.update(transaction.id, { status, mpPaymentId: paymentId })
+          this.eventEmitter.emit('payment.processed', {
+            transactionId: transaction.id,
+            conceptType: transaction.conceptType,
+            conceptId: transaction.conceptId,
+            status,
+          })
+        }
       }
     } catch (error) {
       console.error('Error processing webhook:', error)

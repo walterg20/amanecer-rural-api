@@ -43,6 +43,8 @@ export class PaymentsService {
     })
     await this.transactionRepo.save(transaction)
 
+    const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3001')
+
     const result = await this.preference.create({
       body: {
         items: [
@@ -56,6 +58,12 @@ export class PaymentsService {
           },
         ],
         notification_url: `${this.config.get('API_URL', 'http://localhost:3000')}/api/v1/payments/webhook`,
+        back_urls: {
+          success: `${frontendUrl}/pagos/success`,
+          pending: `${frontendUrl}/pagos/pending`,
+          failure: `${frontendUrl}/pagos/failure`,
+        },
+        auto_return: 'approved',
         external_reference: String(transaction.id),
       },
     })
